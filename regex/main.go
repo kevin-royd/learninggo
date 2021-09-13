@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"regexp"
+	regexp "regexp"
 )
 
 const text = "Myemailisgolang@org.com  email1 is python org@.com email2 is java org@.com"
