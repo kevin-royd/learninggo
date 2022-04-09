@@ -15,8 +15,8 @@ type FileLogger struct {
 	Level    int
 	LogPath  string
 	LogName  string
-	file     *os.File
-	warnFile *os.File
+	file     *os.File //错误文件日志
+	warnFile *os.File //警告文件日志
 }
 
 // NewFileLogger 生成构造函数 返回接口类型
@@ -72,7 +72,7 @@ func (f *FileLogger) Debug(format string, args ...interface{}) {
 	now := time.Now()                          //返回当前本地时间，time
 	s := now.Format("2006-01-02 15:04:05.999") //注意括号中的时间是不能进行更改的但格式可以更改
 	//获取日志级别
-	getLevelText(LogLevelDebug)
+	levelStr := getLevelText(LogLevelDebug)
 	fileName, funcName, lineNo := GetLineInfo()
 	// 用户传入的日志格式，并将可变参数进行格式化
 	msg := fmt.Sprintf(format, args...)
