@@ -41,7 +41,7 @@ func (f *FileLogger) init() {
 	// 如果文件打开没问题就将文件进行赋值
 	f.file = file
 
-	filename = fmt.Sprintf("%s%s.log", f.LogPath, f.LogName)
+	filename = fmt.Sprintf("%s%s-err.log", f.LogPath, f.LogName)
 	file, err = os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0775)
 	if err != nil {
 		panic(fmt.Sprintf("open file %s failed, err:%v", filename, err))
@@ -87,19 +87,19 @@ func (f *FileLogger) Warn(format string, args ...interface{}) {
 	if f.Level > LogLevelWarn{
 		return
 	}
-	writeLog(f.file,LogLevelWarn,format,args...)
+	writeLog(f.warnFile,LogLevelWarn,format,args...)
 }
 func (f *FileLogger) Error(format string, args ...interface{}) {
 	if f.Level > LogLevelError{
 		return
 	}
-	writeLog(f.file,LogLevelError,format,args...)
+	writeLog(f.warnFile,LogLevelError,format,args...)
 }
 func (f *FileLogger) Fatal(format string, args ...interface{}) {
 	if f.Level > LogLevelFatal{
 		return
 	}
-	writeLog(f.file,LogLevelFatal,format,args...)
+	writeLog(f.warnFile,LogLevelFatal,format,args...)
 }
 
 func (f *FileLogger) Close() {
