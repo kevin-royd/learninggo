@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"os"
-	"time"
 )
 
 /*
@@ -64,40 +63,43 @@ func (f *FileLogger) SetLevel(level int) {
 	fmt.Println("implement me")
 }
 
-func (f FileLogger) writeLog(file *os.File,level int,format string,args ...interface{})  {
-	if f.Level > level{
-		return
-	}
-	//	获取时间 如果获取时间戳则为time.now().unix()
-	now := time.Now()                                //返回当前本地时间，time
-	nowData := now.Format("2006-01-02 15:04:05.999") //注意括号中的时间是不能进行更改的但格式可以更改
-	//获取日志级别
-	levelStr := getLevelText(level)
-	// fileName调用程序的文件名和函数名，写入的行数
-	fileName, funcName, lineNo := GetLineInfo()
-	// 用户传入的日志格式，并将可变参数进行格式化
-	msg := fmt.Sprintf(format, args...)
-	fmt.Fprintf(file, "%s %s (%s:%s:%d) %s\n", nowData, levelStr, fileName, funcName, lineNo, msg)
-
-}
 
 func (f *FileLogger) Debug(format string, args ...interface{}) {
-	f.writeLog(f.file,LogLevelDebug,format,args...)
+	//同样对日志级别进行校验
+	if f.Level > LogLevelDebug{
+		return
+	}
+	writeLog(f.file,LogLevelDebug,format,args...)
 }
 func (f *FileLogger) Trace(format string, args ...interface{}) {
-	f.writeLog(f.file,LogLevelTrace,format,args...)
+	if f.Level > LogLevelTrace{
+		return
+	}
+	writeLog(f.file,LogLevelTrace,format,args...)
 }
 func (f *FileLogger) Info(format string, args ...interface{}) {
-	f.writeLog(f.file,LogLevelInfo,format,args...)
+	if f.Level > LogLevelInfo{
+		return
+	}
+	writeLog(f.file,LogLevelInfo,format,args...)
 }
 func (f *FileLogger) Warn(format string, args ...interface{}) {
-	f.writeLog(f.file,LogLevelWarn,format,args...)
+	if f.Level > LogLevelWarn{
+		return
+	}
+	writeLog(f.file,LogLevelWarn,format,args...)
 }
 func (f *FileLogger) Error(format string, args ...interface{}) {
-	f.writeLog(f.file,LogLevelError,format,args...)
+	if f.Level > LogLevelError{
+		return
+	}
+	writeLog(f.file,LogLevelError,format,args...)
 }
 func (f *FileLogger) Fatal(format string, args ...interface{}) {
-	f.writeLog(f.file,LogLevelFatal,format,args...)
+	if f.Level > LogLevelFatal{
+		return
+	}
+	writeLog(f.file,LogLevelFatal,format,args...)
 }
 
 func (f *FileLogger) Close() {
