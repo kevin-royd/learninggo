@@ -31,3 +31,22 @@ func getLevelText(level int) string {
 	return "unknown"
 
 }
+
+func getLogLevel(level string) int {
+	switch level {
+	case "DEBUG":
+		return LogLevelDebug
+	case "TRACE":
+		return LogLevelTrace
+	case "INFO":
+		return LogLevelInfo
+	case "WARN":
+		return LogLevelWarn
+	case "ERROR":
+		return LogLevelError
+	case "FATAL":
+		return LogLevelFatal
+	}
+	return LogLevelDebug
+
+}

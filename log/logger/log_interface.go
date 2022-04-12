@@ -6,6 +6,7 @@ package logger
 
 type LogInterface interface {
 	SetLevel(level int)
+	Init()
 	Debug(format string, args ...interface{})
 	Trace(format string, args ...interface{})
 	Info(format string, args ...interface{})

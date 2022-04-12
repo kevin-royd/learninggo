@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 /*
@@ -11,26 +12,54 @@ import (
 
 // FileLogger 日志的格式 日期 日志级别 日志打印源文件和行数， 错误信息
 type FileLogger struct {
-	Level    int
-	LogPath  string
-	LogName  string
-	file     *os.File //错误文件日志
-	warnFile *os.File //警告文件日志
+	Level       int
+	LogPath     string
+	LogName     string
+	file        *os.File //错误文件日志
+	warnFile    *os.File //警告文件日志
+	LogDataChan chan *LogData
 }
 
 // NewFileLogger 生成构造函数 返回接口类型
-func NewFileLogger(level int, logPath string, logName string) LogInterface {
-	logger := &FileLogger{
-		Level:   level,
-		LogPath: logPath,
-		LogName: logName,
+func NewFileLogger(config map[string]string) (log LogInterface, err error) {
+	logPath, ok := config["log_path"]
+	if !ok {
+		err = fmt.Errorf("not found log_path")
+		return
 	}
-	//	文件初始化
-	logger.init()
-	return logger
+	logName, ok := config["log_name"]
+	if !ok {
+		err = fmt.Errorf("not found log_name")
+		return
+	}
+	logLevel, ok := config["level"]
+	if !ok {
+		err = fmt.Errorf("not found level")
+		return
+	}
+	logChanSize, ok := config["chan_size"]
+	if !ok {
+		// 如果没有设置channel的长度设置默认5万
+		logChanSize = "50000"
+	}
+	//将字符串转换为int
+	ChanSize, err := strconv.Atoi(logChanSize)
+	if err != nil {
+		ChanSize = 50000
+	}
+
+	level := getLogLevel(logLevel)
+	log = &FileLogger{
+		Level:       level,
+		LogPath:     logPath,
+		LogName:     logName,
+		LogDataChan: make(chan *LogData, ChanSize),
+	}
+	log.Init()
+	return
 }
 
-func (f *FileLogger) init() {
+func (f *FileLogger) Init() {
 	//	 构造错误文件，文件名
 	filename := fmt.Sprintf("%s%s.log", f.LogPath, f.LogName)
 	//打开文件，第一个os为如果文件不存在则创建，第二个将数据写入附加文件中，第三个为只以写的方法打开，第三个参数为文件权限
@@ -48,6 +77,23 @@ func (f *FileLogger) init() {
 	}
 	f.warnFile = file
 
+	//开启后台进程
+	go f.writeLogBackGroup()
+
+}
+
+// 实现取出channel中的值写入日志文件
+func (f *FileLogger) writeLogBackGroup() {
+	//channel为空会阻塞，但因为是子线程所有没有影响
+	for data := range f.LogDataChan {
+		var file *os.File = f.file
+		//判断写入日志级别文件
+		if data.WarnAndFatal {
+			file = f.warnFile
+		}
+		fmt.Fprintf(file, "%s %s (%s:%s:%d) %s\n", data.TimeStr, data.LevelStr, data.Filename, data.Filename, data.LineNo, data.Message)
+
+	}
 }
 
 /*
@@ -63,43 +109,73 @@ func (f *FileLogger) SetLevel(level int) {
 	fmt.Println("implement me")
 }
 
-
 func (f *FileLogger) Debug(format string, args ...interface{}) {
 	//同样对日志级别进行校验
-	if f.Level > LogLevelDebug{
+	if f.Level > LogLevelDebug {
 		return
 	}
-	writeLog(f.file,LogLevelDebug,format,args...)
+	data := writeLog(LogLevelDebug, format, args...)
+	// 对channel的长度进行判断，为超过放入，超过抛去，否则阻塞后严重影响性能
+	select {
+	case f.LogDataChan <- data:
+	default:
+
+	}
 }
 func (f *FileLogger) Trace(format string, args ...interface{}) {
-	if f.Level > LogLevelTrace{
+	if f.Level > LogLevelTrace {
 		return
 	}
-	writeLog(f.file,LogLevelTrace,format,args...)
+	data := writeLog(LogLevelTrace, format, args...)
+	select {
+	case f.LogDataChan <- data:
+	default:
+
+	}
 }
 func (f *FileLogger) Info(format string, args ...interface{}) {
-	if f.Level > LogLevelInfo{
+	if f.Level > LogLevelInfo {
 		return
 	}
-	writeLog(f.file,LogLevelInfo,format,args...)
+	data := writeLog(LogLevelInfo, format, args...)
+	select {
+	case f.LogDataChan <- data:
+	default:
+
+	}
 }
 func (f *FileLogger) Warn(format string, args ...interface{}) {
-	if f.Level > LogLevelWarn{
+	if f.Level > LogLevelWarn {
 		return
 	}
-	writeLog(f.warnFile,LogLevelWarn,format,args...)
+	data := writeLog(LogLevelWarn, format, args...)
+	select {
+	case f.LogDataChan <- data:
+	default:
+
+	}
 }
 func (f *FileLogger) Error(format string, args ...interface{}) {
-	if f.Level > LogLevelError{
+	if f.Level > LogLevelError {
 		return
 	}
-	writeLog(f.warnFile,LogLevelError,format,args...)
+	data := writeLog(LogLevelError, format, args...)
+	select {
+	case f.LogDataChan <- data:
+	default:
+
+	}
 }
 func (f *FileLogger) Fatal(format string, args ...interface{}) {
-	if f.Level > LogLevelFatal{
+	if f.Level > LogLevelFatal {
 		return
 	}
-	writeLog(f.warnFile,LogLevelFatal,format,args...)
+	data := writeLog(LogLevelFatal, format, args...)
+	select {
+	case f.LogDataChan <- data:
+	default:
+
+	}
 }
 
 func (f *FileLogger) Close() {
