@@ -2,12 +2,13 @@ package main
 
 import "learninggo/log/logger"
 
-func initLogger(name, logPath, logName string, level string) (err error) {
+func initLogger(name, logPath, logName ,level ,logSplitType string) (err error) {
 	//对map进行赋值
 	m := make(map[string]string, 8)
 	m["log_path"] = logPath
 	m["log_name"] = logName
 	m["log_level"] = level
+	m["log_split_type"]  = logSplitType
 	err = logger.InitLogger(name, m)
 	if err != nil {
 		panic(err)
@@ -22,6 +23,6 @@ func run() {
 	}
 }
 func main() {
-	initLogger("console", "/Users/royd/code/", "logger", "DEBUG")
+	initLogger("console", "/Users/royd/code/", "logger", "DEBUG","size")
 	run()
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 /*
@@ -12,12 +13,15 @@ import (
 
 // FileLogger 日志的格式 日期 日志级别 日志打印源文件和行数， 错误信息
 type FileLogger struct {
-	Level       int
-	LogPath     string
-	LogName     string
-	file        *os.File //错误文件日志
-	warnFile    *os.File //警告文件日志
-	LogDataChan chan *LogData
+	Level         int
+	LogPath       string
+	LogName       string
+	file          *os.File //错误文件日志
+	warnFile      *os.File //警告文件日志
+	LogDataChan   chan *LogData
+	LogSplitType  int
+	LogSplitSize  int64
+	LastSplitHour int //上次切分的小时数
 }
 
 // NewFileLogger 生成构造函数 返回接口类型
@@ -47,13 +51,38 @@ func NewFileLogger(config map[string]string) (log LogInterface, err error) {
 	if err != nil {
 		ChanSize = 50000
 	}
+	// 定义接受日志切割的变量
+	var logSplitType = LogSplitTypeHour
+	var logSplitSize int64
+	logSplitStr, ok := config["log_split_type"]
+	if !ok {
+		logSplitStr = "hour"
+	} else {
+		if logSplitStr == "size" {
+			// 获取按日志切分的大小 如果没有就设置默认切割大小
+			logSplitSizeStr, ok := config["log_split_size"]
+			if !ok {
+				logSplitSizeStr = "104857600"
+			}
+			logSplitSize, err = strconv.ParseInt(logSplitSizeStr, 10, 64)
+			if err != nil {
+				logSplitSize = 104857600
+			}
+			logSplitType = LogSplitTypeSize
+		} else {
+			logSplitType = LogSplitTypeHour
+		}
+	}
 
 	level := getLogLevel(logLevel)
 	log = &FileLogger{
-		Level:       level,
-		LogPath:     logPath,
-		LogName:     logName,
-		LogDataChan: make(chan *LogData, ChanSize),
+		Level:         level,
+		LogPath:       logPath,
+		LogName:       logName,
+		LogDataChan:   make(chan *LogData, ChanSize),
+		LogSplitSize:  logSplitSize,
+		LogSplitType:  logSplitType,
+		LastSplitHour: time.Now().Hour(),
 	}
 	log.Init()
 	return
@@ -82,6 +111,88 @@ func (f *FileLogger) Init() {
 
 }
 
+func (f FileLogger) checkSplitHour(warnFile bool) {
+	// 按时间切分检查上次切分的时间
+	//如果上次时间和当前时间不同 则切分一个新的并且把当前时间赋值给变量
+	now := time.Now()
+	if f.LastSplitHour == now.Hour() {
+		return
+	}
+	//定义新日志文件名
+	var backupFileName string
+	var fileName string
+	//判断日志文件的日志级别
+	file := f.file
+	if warnFile {
+		backupFileName = fmt.Sprintf("%s%s_err.log_%04d%02d%02d", f.LogPath, f.LogName, now.Year(), now.Month(), f.LastSplitHour)
+		fileName = fmt.Sprintf("%s%s.log_err", f.LogPath, f.LogName)
+	} else {
+		backupFileName = fmt.Sprintf("%s%s_%04d%02d%02d", f.LogPath, f.LogName, now.Year(), now.Month(), f.LastSplitHour)
+		fileName = fmt.Sprintf("%s%s.log", f.LogPath, f.LogName)
+	}
+	// 文件关闭进行改名
+	file.Close()
+	os.Rename(fileName, backupFileName)
+	//重新将日志文件打开
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0775)
+	if err != nil {
+		return
+	}
+	//重新对文件进行赋值
+	if warnFile {
+		f.warnFile = file
+	} else {
+		f.file = file
+	}
+}
+
+func (f FileLogger) checkSplitSize(warnFile bool) {
+	file := f.file
+	now := time.Now()
+	if warnFile {
+		file = f.warnFile
+	}
+	//判断文件的大小
+	info, err := file.Stat()
+	if err != nil {
+		return
+	}
+	logSize := info.Size()
+	if logSize <= f.LogSplitSize {
+		return
+	}
+	var backupFileName string
+	var fileName string
+	if warnFile {
+		backupFileName = fmt.Sprintf("%s%s_err.log_%04d%02d%02d%02d", f.LogPath, f.LogName, now.Year(), now.Month(), now.Hour(), now.Minute())
+		fileName = fmt.Sprintf("%s%s.log_err", f.LogPath, f.LogName)
+	} else {
+		backupFileName = fmt.Sprintf("%s%s_err.log_%04d%02d%02d%02d", f.LogPath, f.LogName, now.Year(), now.Month(), now.Hour(), now.Minute())
+		fileName = fmt.Sprintf("%s%s.log_err", f.LogPath, f.LogName)
+	}
+	file.Close()
+	os.Rename(fileName, backupFileName)
+	file, err = os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0775)
+	if err != nil {
+		return
+	}
+	if warnFile {
+		f.warnFile = file
+	} else {
+		f.file = file
+	}
+}
+
+func (f *FileLogger) checkSplitFile(warnFile bool) {
+	// 检查日志切分的类型
+	if f.LogSplitType == LogSplitTypeHour {
+		f.checkSplitHour(warnFile)
+		return
+	} else {
+		f.checkSplitSize(warnFile)
+	}
+}
+
 // 实现取出channel中的值写入日志文件
 func (f *FileLogger) writeLogBackGroup() {
 	//channel为空会阻塞，但因为是子线程所有没有影响
@@ -91,6 +202,8 @@ func (f *FileLogger) writeLogBackGroup() {
 		if data.WarnAndFatal {
 			file = f.warnFile
 		}
+		//日志写入文件之前检查日志文件切分
+		f.checkSplitFile(data.WarnAndFatal)
 		fmt.Fprintf(file, "%s %s (%s:%s:%d) %s\n", data.TimeStr, data.LevelStr, data.Filename, data.Filename, data.LineNo, data.Message)
 
 	}
