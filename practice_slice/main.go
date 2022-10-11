@@ -42,9 +42,13 @@ func main() {
 	sliceVariables3 := []int{1, 2, 3}
 	sliceVariables4 := make([]int, 10)
 	//将源切片的下标赋值到目标切边中，当源切片的长度小于模板切片时，目标切片剩余下标用默认值填充
-	copy(sliceVariables4,sliceVariables3)
+	copy(sliceVariables4, sliceVariables3)
 	fmt.Println(sliceVariables3)
 	fmt.Println(sliceVariables4)
 
-//	slice做为参数传递，比数组的cup效率更高
+	//	slice做为参数传递，比数组的cup效率更高
+
+	// 如何slice追加的元素为sclie 则需要添加... 表示多个元素
+	newSlice := append(sliceVariables3, sliceVariables4[:]...)
+	fmt.Println(newSlice)
 }

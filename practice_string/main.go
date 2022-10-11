@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func main() {
 	/*
@@ -29,5 +32,14 @@ func main() {
 		fmt.Printf("%s编码值=%d,值=%c,类型=%T\n", stringVariables1, value, value, value)
 
 	}
+
+	/*
+		字符串拼接官方推荐使用strings.Builder
+	*/
+	var b strings.Builder
+	b.WriteString("拼接字符1")
+	b.WriteString("拼接字符2")
+	// 最终合成一个string
+	b.String()
 
 }

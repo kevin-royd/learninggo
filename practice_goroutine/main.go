@@ -1,10 +1,8 @@
 package main
 
 import (
-	"io"
-	"log"
-	"net"
-	"time"
+	"fmt"
+	"sync"
 )
 
 /**
@@ -18,30 +16,49 @@ goroutine退出只能由本身控制，不允许从外部强制结束该goroutin
 所以，要实现主进程控制子goroutine的开始和结束，必须借助其它工具来实现。
 */
 
-//并发时钟测试
-func main(){
-	listen, err := net.Listen("tcp", "localhost:8080")
-	if err != nil{
-		log.Fatal(err)
+// 通过计数器来控制并发的数量 并发方式前添加wg.add()  之后添加wg.wait() 逻辑处理完成中添加wg.Done
+var wg sync.WaitGroup
+
+func main() {
+	strSlice := [...]string{
+		"张三", "李四", "王五", "赵一", "孙李",
 	}
-	for{
-		conn, err := listen.Accept()
-		if err != nil{
-			log.Fatal(err)
-			continue
+
+	wg.Add(len(strSlice))
+	go func() {
+		for _, v := range strSlice {
+			fmt.Printf("输出%v\n", v)
+			wg.Done()
 		}
-		handleConn(conn)
-	}
+	}()
+	wg.Wait()
 }
 
-func handleConn(c net.Conn){
-	// 延迟执行
-	defer c.Close()
-	for{
-		_, err := io.WriteString(c, time.Now().Format("19:00:05\n"))
-		if err != nil{
-			return
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
+//并发时钟测试
+//func main(){
+//	listen, err := net.Listen("tcp", "localhost:8080")
+//	if err != nil{
+//		log.Fatal(err)
+//	}
+//	for{
+//		conn, err := listen.Accept()
+//		if err != nil{
+//			log.Fatal(err)
+//			continue
+//		}
+//		handleConn(conn)
+//	}
+//}
+//
+//
+//func handleConn(c net.Conn){
+//	// 延迟执行
+//	defer c.Close()
+//	for{
+//		_, err := io.WriteString(c, time.Now().Format("19:00:05\n"))
+//		if err != nil{
+//			return
+//		}
+//		time.Sleep(1 * time.Second)
+//	}
+//}
