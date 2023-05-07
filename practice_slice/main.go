@@ -33,18 +33,22 @@ func main() {
 	//	第二种 通过make方式创建切片，这种方式可以指定切片的类型，大小和容器、未赋值时有默认值，这种方式切片对应的数组不可见，由make来维护
 	// 这里创建一个int类型，初始化元素个数为5，容量的长度6
 	// 容量的意思为：容器的总容量-左指针走过的索引位置 切片中指针只有左指针，并且索引位置从0开始
+	// 推荐写法: slice1 := make([]int,3,4) 这种
 	var sliceVariables2 []int = make([]int, 5, 6)
 	fmt.Printf("sliceVariables2长度=%d,sliceVariables2容量=%d,sliceVariables2数组地址=%p,sliceVariables2内存地址=%p\n", len(sliceVariables2), cap(sliceVariables2), sliceVariables2, &sliceVariables2)
 	//	切片通过append追加元素 当追加的元素超过容量时，go会向内存中新申请一块内存将原始数据拷贝到新内存中，
 	//	并指向新的内存空间 意思为新的切片容量增加，底层数组地址改变、但内存地址不变
 	// 扩容机制：当容器未超过1024时。每次扩容为旧容器的2倍。超过1024时每次扩容1.25；一直到满足容器为止
+
 	sliceVariables2 = append(sliceVariables2, 7, 8, 9)
 	fmt.Printf("sliceVariables2长度=%d,sliceVariables2容量=%d,sliceVariables2数组地址=%p,sliceVariables2内存地址=%p\n", len(sliceVariables2), cap(sliceVariables2), sliceVariables2, &sliceVariables2)
 
 	//	 slice的拷贝 源切片sliceVariables3 模板切片sliceVariables4
 	sliceVariables3 := []int{1, 2, 3}
+	// make创建slice时。如果只传入一个值。额cap和len都为该值。
 	sliceVariables4 := make([]int, 10)
 	//将源切片的下标赋值到目标切边中，当源切片的长度小于模板切片时，目标切片剩余下标用默认值填充
+	fmt.Printf("lens=%d,cap=%d\n", len(sliceVariables4), cap(sliceVariables4))
 	copy(sliceVariables4, sliceVariables3)
 	fmt.Println(sliceVariables3)
 	fmt.Println(sliceVariables4)
