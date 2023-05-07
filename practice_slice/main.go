@@ -5,6 +5,8 @@ import "fmt"
 func main() {
 	/*
 		切片底层使用的数组，切片的长度通过len获取，容器通过cap获取
+		理解上：cap是一个水桶的容量。len是一个水桶已经有的水量
+		slice和list的区别就是一个定义了长度一个没有定义长度
 		在函数当中传递切片时，当数据类型数据较大时，使用切片可以有效减少内存占用，提高程序执行效率
 	*/
 	//	定义切片
@@ -35,6 +37,7 @@ func main() {
 	fmt.Printf("sliceVariables2长度=%d,sliceVariables2容量=%d,sliceVariables2数组地址=%p,sliceVariables2内存地址=%p\n", len(sliceVariables2), cap(sliceVariables2), sliceVariables2, &sliceVariables2)
 	//	切片通过append追加元素 当追加的元素超过容量时，go会向内存中新申请一块内存将原始数据拷贝到新内存中，
 	//	并指向新的内存空间 意思为新的切片容量增加，底层数组地址改变、但内存地址不变
+	// 扩容机制：当容器未超过1024时。每次扩容为旧容器的2倍。超过1024时每次扩容1.25；一直到满足容器为止
 	sliceVariables2 = append(sliceVariables2, 7, 8, 9)
 	fmt.Printf("sliceVariables2长度=%d,sliceVariables2容量=%d,sliceVariables2数组地址=%p,sliceVariables2内存地址=%p\n", len(sliceVariables2), cap(sliceVariables2), sliceVariables2, &sliceVariables2)
 
