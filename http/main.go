@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -19,6 +20,12 @@ func main() {
 	//	panic(err)
 	//}
 	//fmt.Printf("%s\n", s)
+
+	//基于web方式注册路由
+	http.HandleFunc("/GetBody", HttpBody)
+	http.HandleFunc("/Form", HttpForm)
+	http.HandleFunc("/Url", HttpUrl)
+	http.ListenAndServe(":8080", nil)
 
 	//	模拟移动端发起请求
 	//	1.创建一个http请求 如果是get请求body一般为空，如果post则为请求参数
@@ -49,4 +56,39 @@ func main() {
 	//	4.同样的需要进行 转储响应 如果是post这使用 ioutil.ReadAll()
 	s, err := httputil.DumpResponse(response, true)
 	fmt.Printf("%s\n", s)
+}
+
+func HttpBody(w http.ResponseWriter, r *http.Request) {
+	//body := r.Body
+	//fmt.Printf("读取请求body内容,只能读取一次,内容为%s",body)
+	//如果想重复读取body的内容。则可以调用http库的getbody.底层为匿名函数。默认为空。需要手动赋值
+	if r.GetBody == nil {
+		fmt.Println("body is null")
+	} else {
+		fmt.Printf("body is %T", r.GetBody)
+	}
+
+}
+
+func HttpUrl(w http.ResponseWriter, r *http.Request) {
+	//获取request的请求参数
+	//将数据json序列化
+	data, err := json.Marshal(r.URL)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Fprintf(w, string(data))
+}
+
+func HttpForm(w http.ResponseWriter, r *http.Request) {
+	//格式化请求数据为表单.不建议一会表单，一会json。最好都使用json
+	// 直接格式化返回的数据为空
+	fmt.Fprintf(w, "数据1=%v\n", r.Form)
+	// 需要先调用ParseForm
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	//此时在调用返回的数据就不给空
+	fmt.Fprintf(w, "数据2=%v\n", r.Form)
 }
