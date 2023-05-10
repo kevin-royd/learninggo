@@ -57,7 +57,7 @@ func main() {
 	xiaoming.hobby = []string{"coding", "绘画"}
 	fmt.Println(xiaoming)
 
-	//	结构体使用方式4 地址内心 同样返回结构体指针
+	//	结构体使用方式4 地址类型 同样返回结构体指针
 	var xiaohong *userinfo = &userinfo{
 		"小红", 12, 120, "小学", []string{"学习", "玩", "打游戏"}, map[string]interface{}{"年级": "五年级"},
 	}
@@ -92,4 +92,13 @@ func main() {
 		authorization: 2,
 	}
 	fmt.Println(superadmin, admin)
+
+}
+
+// 结构体类型 A B
+type Handler func()
+
+// 此时就没有办法使用指针;除此之外遇事不决用指针 (H Handler) 为结构体接收器。无法对值进行修改。
+func (H Handler) Hello() {
+
 }
