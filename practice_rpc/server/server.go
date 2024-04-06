@@ -43,7 +43,8 @@ func main() {
 			fmt.Println("获取sock失败:", err)
 			continue
 		}
-		// 为客户端连接提供RPC服务
+		// 为客户端连接提供RPC服务 如果没有指明序列化的传输协议。go的序列化和反序列化都是使用的默认gob格式。客户端也是一样
+		// 为了处理并发。需要通过携程的方式进行处理
 		go rpc.ServeConn(conn)
 	}
 }
