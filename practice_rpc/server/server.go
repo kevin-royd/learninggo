@@ -2,23 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/username/learninggo/practice_rpc/handler"
+	"github.com/username/learninggo/practice_rpc/server_proxy"
 	"net"
 	"net/rpc"
 )
-
-// 定义服务对象
-type helloService struct{}
-
-/*
-Hello 生产rpc的方法供client调用
-request: 客户端传递的参数，
-reply: 指向客户端传递的参数的指针
-*/
-func (h *helloService) Hello(request string, reply *string) error {
-	//模拟对数据进行处理后返回
-	*reply = "hello " + request
-	return nil
-}
 
 func main() {
 	// 实例化server，监听端口
@@ -28,11 +16,9 @@ func main() {
 		return
 	}
 
-	// 注册一个RPC服务对象
-	err = rpc.RegisterName("HelloService", &helloService{})
+	err = server_proxy.RegisterName(&handler.HelloService{})
 	if err != nil {
-		fmt.Println("注册对象失败:", err)
-		return
+		panic(err)
 	}
 
 	// 循环监听客户端连接，并为每个连接提供RPC服务
