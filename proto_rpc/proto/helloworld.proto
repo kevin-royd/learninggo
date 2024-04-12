@@ -1,0 +1,20 @@
+syntax = "proto3";
+option go_package = ".;proto"; //如何没有这个选项生产的proto代码中 import中package 就为当前的helloworld
+
+//定义服务 service 任意名称
+service Greeter{
+    //远程服务接口 生成过后就可以在xxx_grpc.pb.go中看到这个接口了
+    rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+message HelloRequest{
+    string name = 1; //1是编码不是值
+}
+
+message HelloReply{
+    string message = 1;
+}
+
+//安装protobuf后进入proto目录进行自动生成代码
+//go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latestexport
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative helloworld.proto
