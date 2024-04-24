@@ -1,7 +1,7 @@
 package client_proxy
 
 import (
-	"github.com/username/learninggo/practice_rpc/handler"
+	"github.com/username/learninggo/rpc/practice_rpc/handler"
 	"net/rpc"
 )
 

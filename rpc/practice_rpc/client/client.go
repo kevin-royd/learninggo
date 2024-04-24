@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/username/learninggo/practice_rpc/client_proxy"
+	"github.com/username/learninggo/rpc/practice_rpc/client_proxy"
 )
 
 // main函数是程序的入口

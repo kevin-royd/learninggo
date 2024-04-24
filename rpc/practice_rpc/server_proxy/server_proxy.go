@@ -2,7 +2,7 @@ package server_proxy
 
 import (
 	"fmt"
-	"github.com/username/learninggo/practice_rpc/handler"
+	"github.com/username/learninggo/rpc/practice_rpc/handler"
 	"net/rpc"
 )
 

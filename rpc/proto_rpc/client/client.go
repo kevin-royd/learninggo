@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/username/learninggo/proto_rpc/proto"
+	proto2 "github.com/username/learninggo/rpc/proto_rpc/proto"
 	"google.golang.org/grpc"
 )
 
@@ -16,9 +16,9 @@ func main() {
 	// 适应返回的是个连接 需要主动关闭
 	defer conn.Close()
 	// 初始化grpc客户端
-	client := proto.NewGreeterClient(conn)
+	client := proto2.NewGreeterClient(conn)
 	// 调用接口
-	reply, err := client.SayHello(context.Background(), &proto.HelloRequest{Name: "evan"})
+	reply, err := client.SayHello(context.Background(), &proto2.HelloRequest{Name: "evan"})
 	if err != nil {
 		panic("调用失败：" + err.Error())
 

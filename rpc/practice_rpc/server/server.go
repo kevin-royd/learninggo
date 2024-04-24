@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/username/learninggo/practice_rpc/handler"
-	"github.com/username/learninggo/practice_rpc/server_proxy"
+	"github.com/username/learninggo/rpc/practice_rpc/handler"
+	"github.com/username/learninggo/rpc/practice_rpc/server_proxy"
 	"net"
 	"net/rpc"
 )
