@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/BurntSushi/toml"
 	"log"
 	"os"
 	"path/filepath"
-	"src/github.com/BurntSushi/toml"
 )
 
 func main() {
