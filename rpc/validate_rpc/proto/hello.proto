@@ -23,3 +23,4 @@ message Person {
 //    double lng = 2 [(validate.rules).double = {gte: -180, lte: 180}];
 //  }
 }
+// 生成代码命令：protoc --go_out=. --go-grpc_out=. --validate_out="lang=go:." hello.proto
